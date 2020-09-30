@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="compass_compass">Compass</string>
+    <string name="compass_accuracy">Accuracy</string>
+    <string name="compass_strength">Strength</string>
+    <string name="compass_temperature">Temperature</string>
+    <string name="compass_light">Light</string>
+    <string name="compass_humidity">Humidity</string>
+    <string name="compass_pressure">Pressure</string>
+</resources>
