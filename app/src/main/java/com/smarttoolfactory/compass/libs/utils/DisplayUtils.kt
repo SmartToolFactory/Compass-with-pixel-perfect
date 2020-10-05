@@ -1,4 +1,4 @@
-package com.example.compass.libs.utils
+package com.smarttoolfactory.compass.libs.utils
 
 import android.app.Activity
 import android.content.Context

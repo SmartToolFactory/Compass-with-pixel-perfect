@@ -1,11 +1,10 @@
-package com.example.compass.libs.sensors
+package com.smarttoolfactory.compass.libs.sensors
 
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import java.util.*
 import kotlin.collections.ArrayList
 
 class SensorController(context: Context) : SensorEventListener {
@@ -28,8 +27,8 @@ class SensorController(context: Context) : SensorEventListener {
     /*
      * Azimuth and direction calculations
      */
-    private var mMagReady = false
-    private var mGravityReady = false
+    private var magReady = false
+    private var gravityReady = false
 
     // Data from Accelerometer/Gravity and Magnetic Field Sensors
     private var accelVals = FloatArray(3)
@@ -140,7 +139,8 @@ class SensorController(context: Context) : SensorEventListener {
         sensorManager.unregisterListener(this)
     }
 
-    override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
+    override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
+
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
             Sensor.TYPE_ROTATION_VECTOR -> {
@@ -149,17 +149,17 @@ class SensorController(context: Context) : SensorEventListener {
             }
             Sensor.TYPE_GRAVITY -> if (!hasRotationVector) {
                 accelVals = event.values.clone()
-                mGravityReady = true
+                gravityReady = true
             }
             Sensor.TYPE_ACCELEROMETER -> if (!hasRotationVector && !hasGravitySensor) {
                 accelVals = event.values.clone()
-                mGravityReady = true
+                gravityReady = true
             }
             Sensor.TYPE_MAGNETIC_FIELD -> {
                 if (!hasRotationVector) {
                     sensorAccuracy = event.accuracy
                     magVals = event.values.clone()
-                    mMagReady = true
+                    magReady = true
                 }
                 magVals = event.values.clone()
                 run {
@@ -205,7 +205,9 @@ class SensorController(context: Context) : SensorEventListener {
         if (ambientSensorListener != null) {
             ambientSensorListener!!.onSensorAmbientChanges(ambientSensorEvent)
         }
-    }// Low-Pass Filter Angles in degree
+    }
+
+    // Low-Pass Filter Angles in degree
     // Rolling Average Filter
     /**
      * Get azimuth, pitch and roll using Magnetic Field Sensor and Gravity or
@@ -215,9 +217,9 @@ class SensorController(context: Context) : SensorEventListener {
 
         val success =
             SensorManager.getRotationMatrix(mRotationMatrix, identityMatrix, accelVals, magVals)
-        if (mGravityReady && mMagReady && success) {
-            mGravityReady = false
-            mMagReady = false
+        if (gravityReady && magReady && success) {
+            gravityReady = false
+            magReady = false
             SensorManager.getOrientation(mRotationMatrix, mOrientation)
 
             // Low-Pass Filter Angles in degree
@@ -256,6 +258,4 @@ class SensorController(context: Context) : SensorEventListener {
         private const val RAD_TO_DEG = (180 / Math.PI).toFloat()
         private const val ALPHA = .15f
     }
-
-
 }

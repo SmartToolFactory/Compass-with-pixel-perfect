@@ -1,12 +1,11 @@
-package com.example.compass
+package com.smarttoolfactory.compass
 
 import android.hardware.SensorManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.widget.Toolbar
-import com.example.compass.example.view.CompassView
-import com.example.compass.libs.sensors.SensorController
+import com.smarttoolfactory.compass.compassview.CompassView
+import com.smarttoolfactory.compass.libs.sensors.SensorController
 
 class MainActivity : AppCompatActivity() {
 

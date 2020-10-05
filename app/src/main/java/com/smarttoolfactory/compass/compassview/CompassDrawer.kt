@@ -1,15 +1,69 @@
-package com.example.compass.example.view
+package com.smarttoolfactory.compass.compassview
 
 import android.content.Context
 import android.graphics.*
 import android.graphics.Shader.TileMode
-import com.example.compass.R
-import com.example.compass.config.UNIT_DEGREE
+import com.smarttoolfactory.compass.R
+import com.smarttoolfactory.compass.config.UNIT_DEGREE
+import com.smarttoolfactory.compass.controller.MeasurementController
 import java.util.*
 import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.sin
 
-class CompassDrawer internal constructor(private val context: Context, private val measurementController: MeasurementController) {
+class CompassDrawer internal constructor(
+    private val context: Context,
+    private val measurementController: MeasurementController
+) {
+
+    companion object {
+        /*
+            ******* DRAWING COMPONENTS ******
+        */
+        // Width and Height of rectangular view
+        private const val WIDTH = 1080
+        private const val HEIGHT = 1080
+
+        /**
+         * Total radius of circle view
+         */
+        private const val RADIUS_CIRCLE_VIEW = 480
+
+        /**
+         * Frame thickness of circle view
+         */
+        private const val FRAME_THICKNESS = 24
+
+        /**
+         * Radius of circle view minus frame width
+         */
+        private const val RADIUS_VIEW_BACKGROUND = RADIUS_CIRCLE_VIEW - 2 * FRAME_THICKNESS
+
+        // Radius of bezel lines
+        private const val RADIUS_BEZEL_OUTER = RADIUS_VIEW_BACKGROUND - 3
+
+        // Radius of bezel direction numbers
+        private const val RADIUS_BEZEL_NUMBERS = RADIUS_BEZEL_OUTER - 60
+        private const val RADIUS_BEZEL_DIRECTION_TEXT = RADIUS_BEZEL_OUTER - 140
+
+        /**
+         * Radius for lateral indicators such as magnetic field and accuracy or stringLight
+         */
+        private const val RADIUS_LATERAL_INDICATORS = RADIUS_CIRCLE_VIEW + 24
+
+        // Circle dimensions for different sections
+        // OUTER INDICATOR LINE
+        private const val LINE_DEG45 = 40
+        private const val LINE_DEG10 = 30
+        private const val LINE_DEG5 = 24
+        private const val LINE_DEG1 = 18
+
+        // DIRECTION TEXT SIZES
+        private const val SIZE_DIRECTION_CARDINAL = 60
+        private const val SIZE_DIRECTION_INTERCARDINAL = 36
+        private const val SIZE_DIRECTION_ANGLE = 28
+    }
+
     /*
      * ********* DIMENSIONS *********
      */
@@ -59,11 +113,11 @@ class CompassDrawer internal constructor(private val context: Context, private v
     private var radiusRingInner = RADIUS_BEZEL_OUTER - 220.toFloat()
 
     // Radius for place views and direction text
-    protected var mRadiusMiddleCenter = radiusRingInner + (radiusRingMiddle - radiusRingInner) / 2
+    private var mRadiusMiddleCenter = radiusRingInner + (radiusRingMiddle - radiusRingInner) / 2
 
     // Center position of view
-    protected var centerX = 0
-    protected var centerY = 0
+    private var centerX = 0
+    private var centerY = 0
     private var mPixelScale = 1f
 
     // Dimensions for Texts
@@ -178,15 +232,25 @@ class CompassDrawer internal constructor(private val context: Context, private v
 
     private fun init(context: Context) {
         val positions = floatArrayOf(0.3f, .45f, .55f, .65f)
-        val colors = intArrayOf(Color.rgb(130, 130, 130), Color.rgb(180, 180, 180), Color.rgb(190, 190, 190),
-                Color.rgb(130, 130, 130))
+        val colors = intArrayOf(
+            Color.rgb(130, 130, 130), Color.rgb(180, 180, 180), Color.rgb(190, 190, 190),
+            Color.rgb(130, 130, 130)
+        )
 
         //        LinearGradient gradientLinear = new LinearGradient(0, 0, widthView, widthView - 100, colors, positions,
-//                TileMode.CLAMP);
+//                TileMode.CLAMP)
 
 //        val gradientLinear = LinearGradient(0, 0, widthView, widthView - 100, colors, positions, TileMode.CLAMP)
 
-        val gradientLinear = LinearGradient(0f, 0f, widthView.toFloat(), (widthView - 100).toFloat(), colors, positions, TileMode.CLAMP)
+        val gradientLinear = LinearGradient(
+            0f,
+            0f,
+            widthView.toFloat(),
+            (widthView - 100).toFloat(),
+            colors,
+            positions,
+            TileMode.CLAMP
+        )
 
         paintFrame.shader = gradientLinear
         paintFrame.isAntiAlias = true
@@ -197,7 +261,7 @@ class CompassDrawer internal constructor(private val context: Context, private v
         paintBackground.strokeWidth = realPx(3f)
 
         // TODO For shadow Software Layer for View is required
-        // paintCompassViewShadow.setShadowLayer(realPx(6), realPx(6), realPx(6), Color.DKGRAY);
+        // paintCompassViewShadow.setShadowLayer(realPx(6), realPx(6), realPx(6), Color.DKGRAY)
 
         // Gray Bezel
         paintBezelPrimary.style = Paint.Style.STROKE
@@ -261,7 +325,12 @@ class CompassDrawer internal constructor(private val context: Context, private v
 
     private fun drawFrame(canvas: Canvas) {
         // Draw Metallic Frame
-        canvas.drawCircle(centerX.toFloat(), centerY.toFloat(), radiusBackground + frameThickness, paintFrame)
+        canvas.drawCircle(
+            centerX.toFloat(),
+            centerY.toFloat(),
+            radiusBackground + frameThickness,
+            paintFrame
+        )
 
         // Draw Silver Frame Border
         paintBackground.style = Paint.Style.STROKE
@@ -282,10 +351,11 @@ class CompassDrawer internal constructor(private val context: Context, private v
         canvas.drawCircle(centerX.toFloat(), centerY.toFloat(), radiusRingInner, paintBackground)
 
         // Draw Shadow Layer for Compass View
-        // canvas.drawCircle(centerX, centerY, mRadiusCircleView, mPaintCompassViewShadow);
+        // canvas.drawCircle(centerX, centerY, mRadiusCircleView, mPaintCompassViewShadow)
     }
 
     private fun drawBezelGray(canvas: Canvas) {
+
         if (pathPrimary == null) {
             pathPrimary = Path()
             for (degree in 0..359) {
@@ -296,19 +366,25 @@ class CompassDrawer internal constructor(private val context: Context, private v
                 var x = radiusBezelLines * cos
                 var y = radiusBezelLines * sin
                 pathPrimary!!.moveTo(x + centerX, y + centerY)
-                var lineWidth = LINE_DEG45.toFloat()
-                lineWidth = if (degree % 10 == 0) {
-                    LINE_DEG10.toFloat()
-                } else if (degree % 5 == 0) {
-                    LINE_DEG5.toFloat()
-                } else {
-                    LINE_DEG1.toFloat()
+
+                val lineWidth: Float = when {
+                    degree % 10 == 0 -> {
+                        LINE_DEG10.toFloat()
+                    }
+                    degree % 5 == 0 -> {
+                        LINE_DEG5.toFloat()
+                    }
+                    else -> {
+                        LINE_DEG1.toFloat()
+                    }
                 }
+
                 x = (radiusBezelLines - realPx(lineWidth)) * cos
                 y = (radiusBezelLines - realPx(lineWidth)) * sin
                 pathPrimary!!.lineTo(x + centerX, y + centerY)
             }
         }
+
         canvas.drawPath(pathPrimary!!, paintBezelPrimary)
     }
 
@@ -317,7 +393,6 @@ class CompassDrawer internal constructor(private val context: Context, private v
             pathSecondary = Path()
             var degree = 0
             while (degree < 360) {
-
 
                 // Draw indicator lines
                 val cos = Math.cos(degree * Math.PI / 180).toFloat()
@@ -339,8 +414,8 @@ class CompassDrawer internal constructor(private val context: Context, private v
         paintBezelText.textSize = textSizeDirectionAngle
         var i = 0
         while (i < 360) {
-            val cos = Math.cos(Math.toRadians(i.toDouble())).toFloat()
-            val sin = Math.sin(Math.toRadians(i.toDouble())).toFloat()
+            val cos = cos(Math.toRadians(i.toDouble())).toFloat()
+            val sin = sin(Math.toRadians(i.toDouble())).toFloat()
             val x = cos * radiusBezelNumbers + centerX
             val y = sin * radiusBezelNumbers + centerY
 
@@ -350,7 +425,12 @@ class CompassDrawer internal constructor(private val context: Context, private v
             canvas.rotate(90.0f + i)
             val stringAngle = "" + (i + 90) % 360
             paintBezelText.getTextBounds(stringAngle, 0, stringAngle.length, rectTextBounds)
-            canvas.drawText(stringAngle, -rectTextBounds.width() / 2.toFloat(), rectTextBounds.height() / 2.toFloat(), paintBezelText)
+            canvas.drawText(
+                stringAngle,
+                -rectTextBounds.width() / 2.toFloat(),
+                rectTextBounds.height() / 2.toFloat(),
+                paintBezelText
+            )
             canvas.restore()
             i += 10
         }
@@ -359,8 +439,8 @@ class CompassDrawer internal constructor(private val context: Context, private v
     private fun drawBezelDirectionText(canvas: Canvas) {
         var i = 0
         while (i < 360) {
-            val cos = Math.cos(Math.toRadians(i.toDouble())).toFloat()
-            val sin = Math.sin(Math.toRadians(i.toDouble())).toFloat()
+            val cos = cos(Math.toRadians(i.toDouble())).toFloat()
+            val sin = sin(Math.toRadians(i.toDouble())).toFloat()
             val x = cos * mRadiusMiddleCenter + centerX
             val y = sin * mRadiusMiddleCenter + centerY
 
@@ -368,7 +448,7 @@ class CompassDrawer internal constructor(private val context: Context, private v
             canvas.save()
             canvas.translate(x, y)
             canvas.rotate(90.0f + i)
-            var stringDirection: String? = null
+            var stringDirection: String?
             var cardinalDirection = true
             paintBezelText.color = colorBezelWhite
             when (i) {
@@ -402,8 +482,12 @@ class CompassDrawer internal constructor(private val context: Context, private v
                 paintBezelText.textSize = textSizeDirectionInterCardinal
             }
             paintBezelText.getTextBounds(stringDirection, 0, stringDirection.length, rectTextBounds)
-            canvas.drawText(stringDirection, -rectTextBounds.width() / 2.toFloat(), rectTextBounds.height() / 2.toFloat(),
-                    paintBezelText)
+            canvas.drawText(
+                stringDirection,
+                -rectTextBounds.width() / 2.toFloat(),
+                rectTextBounds.height() / 2.toFloat(),
+                paintBezelText
+            )
             canvas.restore()
             i += 45
         }
@@ -416,28 +500,37 @@ class CompassDrawer internal constructor(private val context: Context, private v
         val sweepAngle = 80
         val max = 100f
         val magneticField = measurementController.magValue
-        var percent = Math.min(1f, magneticField / max)
-        percent = percent * sweepAngle
+        var percent = min(1f, magneticField / max)
+        percent *= sweepAngle
 
         // Draw magnetic field indicator background
         pathSideArcs.reset()
-        val bound = RectF(centerX - radiusLateralIndicators, centerY - radiusLateralIndicators, centerX + radiusLateralIndicators, centerY + radiusLateralIndicators)
+        val bound = RectF(
+            centerX - radiusLateralIndicators,
+            centerY - radiusLateralIndicators,
+            centerX + radiusLateralIndicators,
+            centerY + radiusLateralIndicators
+        )
         pathSideArcs.addArc(bound, 320f, sweepAngle.toFloat())
         // Debug rect bounds
-        //canvas.drawRect(bound, mPathPaint);
+        //canvas.drawRect(bound, mPathPaint)
         canvas.drawPath(pathSideArcs, pathPaint)
 
 
         // Set Arc color depending on magnetic field level
-        if (magneticField < 50) {
-            pathPaint.color = colorLightBlue
-            paintBezelText.color = colorLightBlue
-        } else if (magneticField < 65) {
-            pathPaint.color = Color.YELLOW
-            paintBezelText.color = Color.YELLOW
-        } else {
-            pathPaint.color = Color.RED
-            paintBezelText.color = Color.RED
+        when {
+            magneticField < 50 -> {
+                pathPaint.color = colorLightBlue
+                paintBezelText.color = colorLightBlue
+            }
+            magneticField < 65 -> {
+                pathPaint.color = Color.YELLOW
+                paintBezelText.color = Color.YELLOW
+            }
+            else -> {
+                pathPaint.color = Color.RED
+                paintBezelText.color = Color.RED
+            }
         }
 
 
@@ -449,7 +542,13 @@ class CompassDrawer internal constructor(private val context: Context, private v
 
         // Draw Texts
         paintBezelText.textSize = textSizeDirectionAngle
-        drawText(canvas, 313f, String.format(Locale.US, "%dμT", magneticField.toInt()), radiusLateralIndicators - 5, paintBezelText)
+        drawText(
+            canvas,
+            313f,
+            String.format(Locale.US, "%dμT", magneticField.toInt()),
+            radiusLateralIndicators - 5,
+            paintBezelText
+        )
         paintBezelText.color = colorLightGray
         drawText(canvas, 50f, "mag.field", radiusLateralIndicators - 6, paintBezelText)
     }
@@ -470,29 +569,40 @@ class CompassDrawer internal constructor(private val context: Context, private v
 
         // Draw magnetic field indicator background
         pathSideArcs.reset()
-        val bound = RectF(centerX - radiusLateralIndicators, centerY - radiusLateralIndicators, centerX + radiusLateralIndicators, centerY + radiusLateralIndicators)
+        val bound = RectF(
+            centerX - radiusLateralIndicators,
+            centerY - radiusLateralIndicators,
+            centerX + radiusLateralIndicators,
+            centerY + radiusLateralIndicators
+        )
         pathSideArcs.addArc(bound, 140f, sweepAngle.toFloat())
         // Debug rect bounds
-        //canvas.drawRect(bound, mPathPaint);
+        //canvas.drawRect(bound, mPathPaint)
         canvas.drawPath(pathSideArcs, pathPaint)
 
 
         // Set color
-        if (lightValue < 100) {
-            pathPaint.color = colorLightGray
-            paintBezelText.color = colorLightGray
-        } else if (lightValue < 200) {
-            pathPaint.color = Color.WHITE
-            paintBezelText.color = Color.WHITE
-        } else if (lightValue < 500) {
-            pathPaint.color = colorLightBlue
-            paintBezelText.color = colorLightBlue
-        } else if (lightValue < 1000) {
-            pathPaint.color = Color.YELLOW
-            paintBezelText.color = Color.YELLOW
-        } else {
-            pathPaint.color = Color.RED
-            paintBezelText.color = Color.RED
+        when {
+            lightValue < 100 -> {
+                pathPaint.color = colorLightGray
+                paintBezelText.color = colorLightGray
+            }
+            lightValue < 200 -> {
+                pathPaint.color = Color.WHITE
+                paintBezelText.color = Color.WHITE
+            }
+            lightValue < 500 -> {
+                pathPaint.color = colorLightBlue
+                paintBezelText.color = colorLightBlue
+            }
+            lightValue < 1000 -> {
+                pathPaint.color = Color.YELLOW
+                paintBezelText.color = Color.YELLOW
+            }
+            else -> {
+                pathPaint.color = Color.RED
+                paintBezelText.color = Color.RED
+            }
         }
 
         // Draw Filled Path for value
@@ -503,7 +613,13 @@ class CompassDrawer internal constructor(private val context: Context, private v
 
         // Draw Texts
         paintBezelText.textSize = textSizeDirectionAngle
-        drawText(canvas, 227f, String.format(Locale.US, "%dlx", lightValue.toInt()), radiusLateralIndicators - 5, paintBezelText)
+        drawText(
+            canvas,
+            227f,
+            String.format(Locale.US, "%dlx", lightValue.toInt()),
+            radiusLateralIndicators - 5,
+            paintBezelText
+        )
         paintBezelText.color = colorLightGray
         drawText(canvas, 132f, stringLight, radiusLateralIndicators - 6, paintBezelText)
     }
@@ -533,10 +649,15 @@ class CompassDrawer internal constructor(private val context: Context, private v
     }
 
     private fun drawCenterText(canvas: Canvas) {
-        val azimuth: String = "${measurementController.azimuth.toInt()} $UNIT_DEGREE ${measurementController.direction}"
+        val azimuth =
+            "${measurementController.azimuth.toInt()} $UNIT_DEGREE ${measurementController.direction}"
         paintText.getTextBounds(azimuth, 0, azimuth.length, rectTextBounds)
-        canvas.drawText(azimuth, centerX - rectTextBounds.width() / 2.toFloat(), centerY + rectTextBounds.height() / 2.toFloat(),
-                paintText)
+        canvas.drawText(
+            azimuth,
+            centerX - rectTextBounds.width() / 2.toFloat(),
+            centerY + rectTextBounds.height() / 2.toFloat(),
+            paintText
+        )
     }
 
     private fun drawCompassIndicator(canvas: Canvas) {
@@ -566,53 +687,5 @@ class CompassDrawer internal constructor(private val context: Context, private v
         return width * mPixelScale
     }
 
-    fun dispose() {}
-
-    companion object {
-        /*
-     * ****** DRAWING COMPONENTS ******
-     */
-        // Width and Height of rectangular view
-        private const val WIDTH = 1080
-        private const val HEIGHT = 1080
-
-        /**
-         * Total radius of circle view
-         */
-        private const val RADIUS_CIRCLE_VIEW = 480
-
-        /**
-         * Frame thickness of circle view
-         */
-        private const val FRAME_THICKNESS = 24
-
-        /**
-         * Radius of circle view minus frame width
-         */
-        private const val RADIUS_VIEW_BACKGROUND = RADIUS_CIRCLE_VIEW - 2 * FRAME_THICKNESS
-
-        // Radius of bezel lines
-        private const val RADIUS_BEZEL_OUTER = RADIUS_VIEW_BACKGROUND - 3
-
-        // Radius of bezel direction numbers
-        private const val RADIUS_BEZEL_NUMBERS = RADIUS_BEZEL_OUTER - 60
-        private const val RADIUS_BEZEL_DIRECTION_TEXT = RADIUS_BEZEL_OUTER - 140
-
-        /**
-         * Radius for lateral indicators such as magnetic field and accuracy or stringLight
-         */
-        private const val RADIUS_LATERAL_INDICATORS = RADIUS_CIRCLE_VIEW + 24
-
-        // Circle dimensions for different sections
-        // OUTER INDICATOR LINE
-        private const val LINE_DEG45 = 40
-        private const val LINE_DEG10 = 30
-        private const val LINE_DEG5 = 24
-        private const val LINE_DEG1 = 18
-
-        // DIRECTION TEXT SIZES
-        private const val SIZE_DIRECTION_CARDINAL = 60
-        private const val SIZE_DIRECTION_INTERCARDINAL = 36
-        private const val SIZE_DIRECTION_ANGLE = 28
-    }
+    fun dispose() = Unit
 }

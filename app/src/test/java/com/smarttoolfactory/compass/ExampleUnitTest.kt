@@ -1,4 +1,4 @@
-package com.example.compass
+package com.smarttoolfactory.compass
 
 import org.junit.Test
 

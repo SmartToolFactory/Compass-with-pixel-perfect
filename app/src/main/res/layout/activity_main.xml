@@ -23,9 +23,10 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_main_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <com.example.compass.example.view.CompassView
+        <com.smarttoolfactory.compass.compassview.CompassView
             android:id="@+id/compass_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

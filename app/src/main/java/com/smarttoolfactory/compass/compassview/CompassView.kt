@@ -1,4 +1,4 @@
-package com.example.compass.example.view
+package com.smarttoolfactory.compass.compassview
 
 import android.content.Context
 import android.graphics.Canvas
@@ -7,7 +7,8 @@ import android.os.Looper
 import android.os.Message
 import android.util.AttributeSet
 import android.view.View
-import com.example.compass.libs.sensors.SensorController
+import com.smarttoolfactory.compass.controller.MeasurementController
+import com.smarttoolfactory.compass.libs.sensors.SensorController
 
 class CompassView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
@@ -40,12 +41,10 @@ class CompassView(context: Context, attrs: AttributeSet?) : View(context, attrs)
         }
     }
 
-
     init {
         init(context)
         // setLayerType(LAYER_TYPE_SOFTWARE, null);
     }
-
 
     fun setSensorController(sensorController: SensorController?) {
         measurementController.setSensorController(sensorController)

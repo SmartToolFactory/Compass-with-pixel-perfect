@@ -1,4 +1,4 @@
-package com.example.compass.libs.sensors
+package com.smarttoolfactory.compass.libs.sensors
 
 import kotlin.math.atan2
 
